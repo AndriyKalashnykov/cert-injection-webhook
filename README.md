@@ -23,12 +23,32 @@ $ pack build <pod-webhook-image> -e BP_GO_TARGETS="./cmd/pod-webhook" --publish
 $ pack build <setup-ca-certs-image> -e BP_GO_TARGETS="./cmd/setup-ca-certs" --publish
 ```
 
+i.e.
+
+```bash
+pack build andriykalashnykov/pod-webhook-image -e BP_GO_TARGETS="./cmd/pod-webhook" --publish --builder paketobuildpacks/builder:base
+pack build andriykalashnykov/setup-ca-certs-image -e BP_GO_TARGETS="./cmd/setup-ca-certs" --publish --builder paketobuildpacks/builder:base
+```
+
 Use the Carvel tools to install to your cluster.
 
 ```bash
 $ ytt -f ./deployments/k8s \
       -v pod_webhook_image=<pod-webhook-image> \
       -v setup_ca_certs_image=<setup-ca-certs-image> \
+      --data-value-file ca_cert_data=<ca.crt> \
+      --data-value-yaml labels="[label-1, label-2]" \
+      --data-value-yaml annotations="[annotation-1, annotation-2]" \
+      > manifest.yaml
+$ kapp deploy -a cert-injection-webhook -f ./manifest.yaml
+```
+
+i.e.
+
+```bash
+$ ytt -f ./deployments/k8s \
+      -v pod_webhook_image=andriykalashnykov/pod-webhook-image \
+      -v setup_ca_certs_image=andriykalashnykov/setup-ca-certs-image \
       --data-value-file ca_cert_data=<ca.crt> \
       --data-value-yaml labels="[label-1, label-2]" \
       --data-value-yaml annotations="[annotation-1, annotation-2]" \
